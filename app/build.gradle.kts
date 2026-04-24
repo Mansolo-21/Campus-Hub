@@ -61,4 +61,17 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    //tail
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    //cloudinary
+    implementation("com.cloudinary:cloudinary-android:2.3.1")
+    //retrofit
+    // Core Retrofit library
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+
+    // GSON converter (required to parse JSON responses into Kotlin/Java objects)
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    // Optional: Logging Interceptor (highly recommended for debugging network calls)
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
