@@ -5,4 +5,7 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
     const val SPLASH = "splash"
+    const val ADDITEM="additem"
+    const val ITEMLIST="itemlist"
+    const val ITEM_DETAIL = "item_detail"
 }
