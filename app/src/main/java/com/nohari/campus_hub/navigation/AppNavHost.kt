@@ -3,6 +3,8 @@ package com.nohari.campus_hub.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.nohari.campus_hub.Screens.Announcements.AnnouncementsScreen
+import com.nohari.campus_hub.Screens.Events.EventsScreen
 
 import com.nohari.campus_hub.Screens.HomeScreen
 import com.nohari.campus_hub.Screens.Marketplace.AddItemScreen
@@ -45,6 +47,13 @@ fun AppNavHost(navController: NavHostController) {
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
 
             ItemDetailScreen(navController, itemId)
+        }
+        composable(Routes.ANNOUNCEMENTS) {
+            AnnouncementsScreen()
+        }
+
+        composable(Routes.EVENTS) {
+            EventsScreen()
         }
     }
 }

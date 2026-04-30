@@ -61,12 +61,15 @@ class ItemViewModel(
 
                     val imageUrl = resultData["secure_url"].toString()
 
+                    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
                     val item = Item(
                         id = itemId,
                         name = name,
                         price = price,
                         description = description,
-                        imageUrl = imageUrl
+                        imageUrl = imageUrl,
+                        ownerId = currentUser?.uid ?: ""   // ✅ SAVE OWNER
                     )
 
                     db.collection("items")
@@ -98,7 +101,21 @@ class ItemViewModel(
             }
     }
 
-    fun deleteItem(id: String) {
-        db.collection("items").document(id).delete()
+    fun deleteItem(item: Item) {
+
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+        if (currentUser?.uid != item.ownerId) {
+            android.widget.Toast.makeText(
+                context,
+                "You can only delete your own items",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        db.collection("items")
+            .document(item.id)
+            .delete()
     }
 }

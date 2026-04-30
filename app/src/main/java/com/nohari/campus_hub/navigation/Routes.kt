@@ -8,4 +8,6 @@ object Routes {
     const val ADDITEM="additem"
     const val ITEMLIST="itemlist"
     const val ITEM_DETAIL = "item_detail"
+    const val ANNOUNCEMENTS = "announcements"
+    const val EVENTS = "events"
 }

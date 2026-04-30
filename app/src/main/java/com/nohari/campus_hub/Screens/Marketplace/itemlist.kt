@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.nohari.campus_hub.Data.ItemViewModel
 import com.nohari.campus_hub.models.Item
+import com.nohari.campus_hub.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +35,7 @@ fun ItemListScreen(navController: NavHostController) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("add_item")
+                    navController.navigate(Routes.ADDITEM)
                 }
             ) {
                 Text("+")
@@ -52,6 +53,10 @@ fun ItemListScreen(navController: NavHostController) {
                     modifier = Modifier
                         .padding(10.dp)
                         .fillMaxWidth()
+                        .clickable {
+                            // 🔥 OPEN ITEM DETAIL
+                            navController.navigate("${Routes.ITEM_DETAIL}/${item.id}")
+                        }
                 ) {
 
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -71,17 +76,28 @@ fun ItemListScreen(navController: NavHostController) {
                         Text("KES ${item.price}")
                         Text(item.description)
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                        Text(
-                            "Delete",
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.clickable {
-                                viewModel.deleteItem(item.id)
+                        // 🔥 ACTION ROW (PROPER UX)
+                        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+
+                            if (currentUser?.uid == item.ownerId) {
+                                Text(
+                                    text = "Delete",
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.clickable {
+                                        viewModel.deleteItem(item)
+                                    }
+                                )
                             }
-                        )
-                    }
+                        }
 
+                    }
                 }
             }
         }

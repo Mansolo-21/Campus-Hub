@@ -5,5 +5,6 @@ data class Item(
     var name: String = "",
     var price: String = "",
     var description: String = "",
-    var imageUrl: String = ""
+    var imageUrl: String = "",
+    var ownerId: String = ""  
 )

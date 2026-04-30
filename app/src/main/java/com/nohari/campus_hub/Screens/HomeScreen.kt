@@ -1,13 +1,17 @@
 package com.nohari.campus_hub.Screens
 
-
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
@@ -25,7 +29,6 @@ fun HomeScreen(navController: NavController) {
     var announcements by remember { mutableStateOf(listOf<String>()) }
     var assignments by remember { mutableStateOf(listOf<String>()) }
 
-    // 🔥 Load user data
     LaunchedEffect(true) {
         val uid = auth.currentUser?.uid
 
@@ -34,7 +37,6 @@ fun HomeScreen(navController: NavController) {
             fullName = doc.getString("fullName") ?: "Student"
         }
 
-        // sample announcements (replace with Firestore later)
         announcements = listOf(
             "Math CAT postponed",
             "Fee deadline extended",
@@ -50,79 +52,140 @@ fun HomeScreen(navController: NavController) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 16.dp)
     ) {
 
-        // 👋 GREETING
+        /* ---------------- HERO HEADER ---------------- */
         item {
-            Text(
-                text = "Welcome, $fullName 👋",
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // 📊 DASHBOARD CARDS
-        item {
-            Text("Dashboard", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                DashboardCard("Assignments")
-                DashboardCard("Announcements")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // 📢 ANNOUNCEMENTS
-        item {
-            Text("Announcements", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        items(announcements) { item ->
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(20.dp)
             ) {
                 Text(
-                    text = item,
-                    modifier = Modifier.padding(12.dp)
+                    text = "Hi, $fullName 👋",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Campus Hub Dashboard",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        /* ---------------- QUICK ACTIONS ---------------- */
+        item {
+            SectionCard(title = "Quick Actions") {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    ActionTile(
+                        title = "Add Item",
+                        icon = Icons.Default.Add,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        onClick = { navController.navigate(Routes.ADDITEM) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ActionTile(
+                        title = "Marketplace",
+                        icon = Icons.Default.ShoppingCart,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        onClick = { navController.navigate(Routes.ITEMLIST) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    ActionTile(
+                        title = "Announcements",
+                        icon = Icons.Default.Info,
+                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                        onClick = { navController.navigate(Routes.ANNOUNCEMENTS) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    ActionTile(
+                        title = "Events",
+                        icon = Icons.Default.DateRange,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        onClick = { navController.navigate(Routes.EVENTS) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
-        item { Spacer(modifier = Modifier.height(16.dp)) }
-
-        // 📁 ASSIGNMENTS
+        /* ---------------- DASHBOARD ---------------- */
         item {
-            Text("Assignments", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+            SectionCard(title = "Overview") {
 
-        items(assignments) { item ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = item,
-                    modifier = Modifier.padding(12.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+
+                    StatCard(
+                        title = "Assignments",
+                        value = assignments.size,
+                        icon = Icons.Default.Create,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    StatCard(
+                        title = "Announcements",
+                        value = announcements.size,
+                        icon = Icons.Default.Notifications,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
-        item { Spacer(modifier = Modifier.height(24.dp)) }
-
-        // 🚪 LOGOUT
+        /* ---------------- ANNOUNCEMENTS ---------------- */
         item {
+            SectionCard(title = "Announcements") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    announcements.forEach {
+                        ListItemCard(Icons.Default.Notifications, it)
+                    }
+                }
+            }
+        }
+
+        /* ---------------- ASSIGNMENTS ---------------- */
+        item {
+            SectionCard(title = "Assignments") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    assignments.forEach {
+                        ListItemCard(Icons.Default.Create, it)
+                    }
+                }
+            }
+        }
+
+        /* ---------------- LOGOUT ---------------- */
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+
             Button(
                 onClick = {
                     FirebaseAuth.getInstance().signOut()
@@ -130,26 +193,122 @@ fun HomeScreen(navController: NavController) {
                         popUpTo(0)
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
             ) {
+                Icon(Icons.Default.AccountCircle, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Logout")
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
         }
     }
 }
 
+/* ---------------- SECTION WRAPPER (PRO STYLE) ---------------- */
+
 @Composable
-fun DashboardCard(title: String) {
-    Card(
+fun SectionCard(title: String, content: @Composable () -> Unit) {
+    Column(
         modifier = Modifier
-            .width(150.dp)
-            .height(80.dp)
+            .fillMaxWidth()
+            .padding(vertical = 10.dp)
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant,
+                shape = MaterialTheme.shapes.large
+            )
+            .padding(16.dp)
     ) {
-        Box(
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        content()
+    }
+}
+
+/* ---------------- ACTION TILES ---------------- */
+
+@Composable
+fun ActionTile(
+    title: String,
+    icon: ImageVector,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.height(100.dp),
+        colors = CardDefaults.cardColors(containerColor = color)
+    ) {
+        Column(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = androidx.compose.ui.Alignment.Center
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Icon(icon, contentDescription = null)
+            Spacer(modifier = Modifier.height(6.dp))
             Text(title)
+        }
+    }
+}
+
+/* ---------------- STATS ---------------- */
+
+@Composable
+fun StatCard(
+    title: String,
+    value: Int,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.height(110.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = null)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(title)
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
+    }
+}
+
+/* ---------------- LIST ITEMS ---------------- */
+
+@Composable
+fun ListItemCard(icon: ImageVector, text: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null)
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(text)
         }
     }
 }
