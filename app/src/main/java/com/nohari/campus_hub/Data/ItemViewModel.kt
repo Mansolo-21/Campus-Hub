@@ -20,9 +20,9 @@ class ItemViewModel(
 
     init {
         val config = HashMap<String, String>()
-        config["cloud_name"] = "YOUR_CLOUD_NAME"
-        config["api_key"] = "YOUR_API_KEY"
-        config["api_secret"] = "YOUR_API_SECRET"
+        config["cloud_name"] = "dkgilo0wp"
+        config["api_key"] = "979484549793933"
+
 
         try {
             MediaManager.init(context, config)
@@ -51,6 +51,7 @@ class ItemViewModel(
         val itemId = db.collection("items").document().id
 
         MediaManager.get().upload(imageUri)
+            .unsigned("campus_hub_upload")
             .callback(object : UploadCallback {
 
                 override fun onStart(requestId: String?) {}
@@ -69,7 +70,7 @@ class ItemViewModel(
                         price = price,
                         description = description,
                         imageUrl = imageUrl,
-                        ownerId = currentUser?.uid ?: ""   // ✅ SAVE OWNER
+                        ownerId = currentUser?.uid ?: ""
                     )
 
                     db.collection("items")

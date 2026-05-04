@@ -9,26 +9,31 @@ class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
 
-    suspend fun register(fullName: String, email: String, password: String): Result<Unit> {
-        return try {
-            val result = auth.createUserWithEmailAndPassword(email.trim(), password).await()
+    suspend fun register(
+        fullName: String,
+        email: String,
+        password: String,
+        onSuccess:() -> Unit,
+        onError: (String) -> Unit
+    ){
+        auth.createUserWithEmailAndPassword(email,password)
+            .addOnSuccessListener {
+                val uid =auth.currentUser?.uid ?:
+                return@addOnSuccessListener
 
-            val userId = result.user?.uid ?: throw Exception("User ID is null")
+                val user = hashMapOf(
+                    "uid" to uid,
+                    "fullName" to fullName,
+                    "email" to email,
+                    "role" to "student"
+                )
 
-            val userMap = hashMapOf(
-                "fullName" to fullName,
-                "email" to email
-            )
-
-            db.collection("users").document(userId).set(userMap).await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
+                db.collection("users").document(uid).set(user)
+                    .addOnSuccessListener{ onSuccess() }
+           }
+            .addOnFailureListener {
+                onError(it.message?: "Error")
+            }}
     suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             auth.signInWithEmailAndPassword(email.trim(), password).await()
