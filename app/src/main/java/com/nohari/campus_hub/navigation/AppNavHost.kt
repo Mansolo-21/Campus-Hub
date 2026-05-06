@@ -1,9 +1,16 @@
 package com.nohari.campus_hub.navigation
 
+import android.R
+import com.nohari.campus_hub.Screens.Admin.AddAnnouncementScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.nohari.campus_hub.Screens.Admin.AddEventScreen
+import com.nohari.campus_hub.Screens.Admin.AdminDashboardScreen
+import com.nohari.campus_hub.Screens.Admin.AnnouncementListScreen
 import com.nohari.campus_hub.Screens.Announcements.AnnouncementsScreen
+import com.nohari.campus_hub.Screens.ChatScreen
+import com.nohari.campus_hub.Screens.CreateTeacherScreen
 import com.nohari.campus_hub.Screens.Events.EventsScreen
 
 import com.nohari.campus_hub.Screens.HomeScreen
@@ -54,6 +61,23 @@ fun AppNavHost(navController: NavHostController) {
 
         composable(Routes.EVENTS) {
             EventsScreen()
+        }
+        composable(Routes.ADMIN_DASHBOARD) {
+            AdminDashboardScreen(navController)
+        }
+
+        composable(Routes.CREATE_TEACHER) {
+            CreateTeacherScreen(navController)
+        }
+        composable(Routes.ANNOUNCEMENTS) {
+            AnnouncementListScreen(navController)
+        }
+
+        composable(Routes.ADD_ANNOUNCEMENT) {
+            AddAnnouncementScreen(navController)
+        }
+        composable(Routes.ADD_EVENT){
+            AddEventScreen(navController)
         }
     }
 }

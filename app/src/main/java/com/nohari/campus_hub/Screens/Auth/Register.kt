@@ -4,6 +4,7 @@ import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import com.nohari.campus_hub.R
 import com.nohari.campus_hub.data.repository.AuthRepository
 import com.nohari.campus_hub.navigation.Routes
 import kotlinx.coroutines.launch
+
 
 @Composable
 fun RegisterScreen(navController: NavController) {
@@ -33,6 +35,7 @@ fun RegisterScreen(navController: NavController) {
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     var errorMsg by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -41,14 +44,16 @@ fun RegisterScreen(navController: NavController) {
     ) {
 
         Text("Create Account", style = MaterialTheme.typography.headlineMedium)
+
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "logo",
             modifier = Modifier
                 .size(150.dp)
-                .align(Alignment.CenterHorizontally) // centers it
-                .clip(CircleShape) // makes it circular
+                .align(Alignment.CenterHorizontally)
+                .clip(CircleShape)
         )
+
         Spacer(modifier = Modifier.height(30.dp))
 
         // FULL NAME
@@ -66,6 +71,7 @@ fun RegisterScreen(navController: NavController) {
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -107,9 +113,9 @@ fun RegisterScreen(navController: NavController) {
             onClick = {
                 val cleanEmail = email.trim()
 
-                // VALIDATION
                 when {
                     fullName.isBlank() -> errorMsg = "Full name required"
+
                     cleanEmail.isEmpty() ||
                             !Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches() ->
                         errorMsg = "Enter a valid email"
@@ -122,10 +128,17 @@ fun RegisterScreen(navController: NavController) {
 
                     else -> {
                         scope.launch {
+                            isLoading = true
                             val result = repo.register(fullName, cleanEmail, password)
+                            isLoading = false
+
                             result.onSuccess {
                                 errorMsg = ""
-                                navController.navigate("login")
+
+                                // ✅ Go to home instead of login
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(Routes.REGISTER) { inclusive = true }
+                                }
                             }.onFailure {
                                 errorMsg = it.message ?: "Registration failed"
                             }
@@ -133,11 +146,15 @@ fun RegisterScreen(navController: NavController) {
                     }
                 }
             },
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Register")
+            Text(if (isLoading) "Creating account..." else "Register")
         }
-        TextButton(onClick = {navController.navigate(Routes.LOGIN)}) {
+
+        TextButton(onClick = {
+            navController.navigate(Routes.LOGIN)
+        }) {
             Text("Already have an account? Login")
         }
 

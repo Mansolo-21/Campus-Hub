@@ -5,26 +5,38 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nohari.campus_hub.AppCard
+import com.nohari.campus_hub.models.Announcement
 
-data class Announcement(
-    val title: String,
-    val date: String
-)
 
+
+// 🖥️ SCREEN
 @Composable
 fun AnnouncementsScreen() {
 
     var announcements by remember {
         mutableStateOf(
             listOf(
-                Announcement("Math CAT postponed", "30 Apr 2026"),
-                Announcement("Fee deadline extended", "28 Apr 2026"),
-                Announcement("New timetable released", "25 Apr 2026")
+                Announcement(
+                    "Math CAT postponed",
+                    "The test has been moved to next week.",
+                    "30 Apr 2026"
+                ),
+                Announcement(
+                    "Fee deadline extended",
+                    "Students now have 1 extra week to pay.",
+                    "28 Apr 2026"
+                ),
+                Announcement(
+                    "New timetable released",
+                    "Check the portal for the updated schedule.",
+                    "25 Apr 2026"
+                )
             )
         )
     }
@@ -49,28 +61,47 @@ fun AnnouncementsScreen() {
         }
     }
 }
-
 @Composable
 fun AnnouncementCard(item: Announcement) {
-    Card(
+
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+            .padding(vertical = 6.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row {
-                Icon(Icons.Default.Notifications, contentDescription = null)
+
+        Column {
+
+            // 🔔 TITLE ROW
+            Row(verticalAlignment = Alignment.CenterVertically) {
+
+                Icon(
+                    Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(item.title, style = MaterialTheme.typography.titleMedium)
+
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 📝 MESSAGE
+            Text(
+                text = item.message,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            // 📅 DATE
             Text(
-                text = "Posted: ${item.date}",
+                text = "Posted: ${item.timestamp}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

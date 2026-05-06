@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.nohari.campus_hub.AppCard
 import com.nohari.campus_hub.Data.ItemViewModel
 import com.nohari.campus_hub.models.Item
 import com.nohari.campus_hub.navigation.Routes
@@ -49,17 +50,15 @@ fun ItemListScreen(navController: NavHostController) {
 
             items(items) { item ->
 
-                Card(
+                AppCard(
                     modifier = Modifier
                         .padding(10.dp)
                         .fillMaxWidth()
                         .clickable {
-                            // 🔥 OPEN ITEM DETAIL
-                            navController.navigate("${Routes.ITEM_DETAIL}/${item.id}")
+                            navController.navigate("item_detail/${item.id}")
                         }
                 ) {
-
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column {
 
                         AsyncImage(
                             model = item.imageUrl,
@@ -70,11 +69,13 @@ fun ItemListScreen(navController: NavHostController) {
                             contentScale = ContentScale.Crop
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(Modifier.height(8.dp))
 
-                        Text(item.name)
-                        Text("KES ${item.price}")
-                        Text(item.description)
+                        Text(item.name, style = MaterialTheme.typography.titleMedium)
+                        Text("KES ${item.price}", color = MaterialTheme.colorScheme.primary)
+                        Text(item.description, maxLines = 2)
+                    }
+                }
 
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -101,5 +102,3 @@ fun ItemListScreen(navController: NavHostController) {
                 }
             }
         }
-    }
-}
