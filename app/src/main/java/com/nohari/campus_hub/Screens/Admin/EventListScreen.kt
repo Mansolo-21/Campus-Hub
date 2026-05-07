@@ -1,151 +1,131 @@
 package com.nohari.campus_hub.Screens.Admin
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.nohari.campus_hub.Components.EventCard
 import com.nohari.campus_hub.Data.EventViewModel
 import com.nohari.campus_hub.models.Event
-import com.nohari.campus_hub.utils.RoleManager
+import com.nohari.campus_hub.models.EventUiState
 
 @Composable
 fun EventListScreen(navController: NavHostController) {
 
     val vm: EventViewModel = viewModel()
+    val state by vm.uiState
 
-    var events by remember { mutableStateOf(listOf<Event>()) }
-    var role by remember { mutableStateOf<String?>(null) }
-    var eventToDelete by remember { mutableStateOf<Event?>(null) }
-
-    // ✅ Load data + role safely
-    LaunchedEffect(Unit) {
-        vm.getEvents { list ->
-            events = list
-        }
-
-        RoleManager.getUserRole { userRole ->
-            role = userRole
-        }
+    var eventToDelete by remember {
+        mutableStateOf<Event?>(null)
     }
 
     Scaffold(
         floatingActionButton = {
-            // ✅ FAB shows only when role is confirmed admin
-            if (role == "admin") {
-                FloatingActionButton(
-                    onClick = { navController.navigate("add_event") }
+            FloatingActionButton(
+                onClick = {
+                    navController.navigate("add_event")
+                }
+            ) {
+                Icon(Icons.Default.Add, null)
+            }
+        }
+    ) { padding ->
+
+        when (state) {
+
+            is EventUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Event")
+                    CircularProgressIndicator()
                 }
             }
-        }
-    ) { paddingValues ->
 
-        if (events.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-            ) {
-                Text(
-                    text = "No events available",
-                    modifier = Modifier.padding(16.dp)
-                )
+            is EventUiState.Empty -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No events found")
+                }
             }
-        } else {
 
-            LazyColumn(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            is EventUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text((state as EventUiState.Error).message)
+                }
+            }
 
-                items(events, key = { it.id }) { event ->
+            is EventUiState.Success -> {
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(4.dp)
-                    ) {
+                val events = (state as EventUiState.Success).events
 
-                        Column(modifier = Modifier.padding(16.dp)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
 
-                            Text(
-                                text = event.title,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                    item {
+                        Text(
+                            text = "Manage Events",
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                    }
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                    items(events, key = { it.id }) { event ->
 
-                            Text(event.description)
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text("📅 ${event.date}")
-
-                            // Admin delete
-                            if (role == "admin") {
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete",
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clickable {
-                                                eventToDelete = event
-                                            }
-                                    )
-                                }
+                        EventCard(
+                            event = event,
+                            isAdmin = true,
+                            onDelete = {
+                                eventToDelete = event
                             }
-                        }
+                        )
                     }
                 }
             }
         }
 
-        // 🔴 Delete dialog
         if (eventToDelete != null) {
-            AlertDialog(
-                onDismissRequest = { eventToDelete = null },
-                title = { Text("Delete Event") },
-                text = { Text("Are you sure you want to delete this event?") },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            eventToDelete?.let {
-                                vm.deleteEvent(it.id)
 
-                                // refresh list
-                                vm.getEvents { updated ->
-                                    events = updated
-                                }
-                            }
-                            eventToDelete = null
-                        }
-                    ) {
-                        Text("Delete", color = MaterialTheme.colorScheme.error)
+            AlertDialog(
+                onDismissRequest = {
+                    eventToDelete = null
+                },
+                title = {
+                    Text("Delete Event")
+                },
+                text = {
+                    Text("This action cannot be undone")
+                },
+                confirmButton = {TextButton(
+                    onClick = {
+                        vm.deleteEvent(eventToDelete!!.id)
+                        eventToDelete = null
                     }
+                ) {
+                    Text("Delete")
+                }
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { eventToDelete = null }
+                        onClick = {
+                            eventToDelete = null
+                        }
                     ) {
                         Text("Cancel")
                     }

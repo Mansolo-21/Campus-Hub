@@ -1,12 +1,45 @@
 package com.nohari.campus_hub.Data
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.models.Event
+import com.nohari.campus_hub.models.EventUiState
+import java.util.UUID
 
 class EventViewModel : ViewModel() {
 
     private val db = FirebaseFirestore.getInstance()
+
+    var uiState = mutableStateOf<EventUiState>(EventUiState.Loading)
+        private set
+
+    init {
+        fetchEvents()
+    }
+
+    fun fetchEvents() {
+
+        uiState.value = EventUiState.Loading
+
+        db.collection("events")
+            .get()
+            .addOnSuccessListener { result ->
+
+                val events = result.documents.mapNotNull {
+                    it.toObject(Event::class.java)
+                }
+
+                uiState.value = if (events.isEmpty()) {
+                    EventUiState.Empty
+                } else {
+                    EventUiState.Success(events)
+                }
+            }
+            .addOnFailureListener {
+                uiState.value = EventUiState.Error(it.message ?: "Unknown error")
+            }
+    }
 
     fun addEvent(
         title: String,
@@ -16,38 +49,34 @@ class EventViewModel : ViewModel() {
         onError: (String) -> Unit
     ) {
 
-        if (title.isBlank() || description.isBlank() || date.isBlank()) {
-            onError("Fill all fields")
-            return
-        }
+        val id = UUID.randomUUID().toString()
 
-        val id = db.collection("events").document().id
-
-        val event = Event(id, title, description, date)
+        val event = Event(
+            id = id,
+            title = title,
+            description = description,
+            date = date
+        )
 
         db.collection("events")
             .document(id)
             .set(event)
             .addOnSuccessListener {
+                fetchEvents()
                 onSuccess()
             }
             .addOnFailureListener {
-                onError(it.message ?: "Failed to add event")
-            }
-    }
-
-    fun getEvents(onResult: (List<Event>) -> Unit) {
-        db.collection("events")
-            .get()
-            .addOnSuccessListener { result ->
-                val list = result.documents.mapNotNull {
-                    it.toObject(Event::class.java)?.copy(id = it.id)
-                }
-                onResult(list)
+                onError(it.message ?: "Failed to save")
             }
     }
 
     fun deleteEvent(id: String) {
-        db.collection("events").document(id).delete()
+
+        db.collection("events")
+            .document(id)
+            .delete()
+            .addOnSuccessListener {
+                fetchEvents()
+            }
     }
 }

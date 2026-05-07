@@ -18,6 +18,7 @@ import com.nohari.campus_hub.Screens.Marketplace.AddItemScreen
 import com.nohari.campus_hub.Screens.Marketplace.ItemDetailScreen
 import com.nohari.campus_hub.Screens.Marketplace.ItemListScreen
 import com.nohari.campus_hub.Screens.SplashScreen
+import com.nohari.campus_hub.Screens.UserListScreen
 import com.nohari.campus_hub.screens.auth.LoginScreen
 import com.nohari.campus_hub.screens.auth.RegisterScreen
 
@@ -40,15 +41,15 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.HOME) {
             HomeScreen(navController)
         }
-        composable(Routes.SPLASH){
+        composable(Routes.SPLASH) {
             SplashScreen(navController)
         }
-        composable(Routes.ADDITEM){
+        composable(Routes.ADDITEM) {
             AddItemScreen(navController)
         }
-        composable(Routes.ITEMLIST){
-        ItemListScreen(navController)
-    }
+        composable(Routes.ITEMLIST) {
+            ItemListScreen(navController)
+        }
         composable("${Routes.ITEM_DETAIL}/{itemId}") { backStackEntry ->
 
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
@@ -60,7 +61,7 @@ fun AppNavHost(navController: NavHostController) {
         }
 
         composable(Routes.EVENTS) {
-            EventsScreen()
+            EventsScreen(navController)
         }
         composable(Routes.ADMIN_DASHBOARD) {
             AdminDashboardScreen(navController)
@@ -76,8 +77,11 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.ADD_ANNOUNCEMENT) {
             AddAnnouncementScreen(navController)
         }
-        composable(Routes.ADD_EVENT){
+        composable(Routes.ADD_EVENT) {
             AddEventScreen(navController)
+        }
+        composable(Routes.USERS) {
+            UserListScreen(navController)
         }
     }
 }

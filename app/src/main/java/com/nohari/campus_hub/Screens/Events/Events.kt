@@ -4,92 +4,121 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.nohari.campus_hub.Components.EventCard
 import com.nohari.campus_hub.Data.EventViewModel
-import com.nohari.campus_hub.models.Event
+import com.nohari.campus_hub.models.EventUiState
+import com.nohari.campus_hub.utils.RoleManager
 
 @Composable
-fun EventsScreen() {
+fun EventsScreen(
+    navController: NavHostController
+) {
 
     val vm: EventViewModel = viewModel()
+    val state by vm.uiState
 
-    var events by remember { mutableStateOf<List<Event>>(emptyList()) }
+    var role by remember { mutableStateOf<String?>(null) }
 
+    // Load user role once
     LaunchedEffect(Unit) {
-        vm.getEvents { list ->
-            events = list
+        RoleManager.getUserRole { userRole ->
+            role = userRole
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
 
-        item {
-            Text(
-                text = "📅 Events",
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        floatingActionButton = {
 
-        items(events) { event ->
+            // ONLY ADMIN SEES PLUS BUTTON
+            if (role == "admin") {
 
-            EventCard(
-                event = event,
-                onDelete = {
-                    vm.deleteEvent(event.id)
-
-                    // refresh after delete
-                    vm.getEvents { updated ->
-                        events = updated
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate("add_event")
                     }
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add Event"
+                    )
                 }
-            )
+            }
         }
-    }
-}
-@Composable
-fun EventCard(
-    event: Event,
-    onDelete: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+    ) { padding ->
 
-                Text(
-                    event.title,
-                    style = MaterialTheme.typography.titleMedium
-                )
+        when (val currentState = state) {
 
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+            is EventUiState.Loading -> {
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            is EventUiState.Empty -> {
 
-            Text("📍 ${event.description}")
-            Text("📆 ${event.date}")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No campus events available")
+                }
+            }
+
+            is EventUiState.Error -> {
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(currentState.message)
+                }
+            }
+
+            is EventUiState.Success -> {
+
+                val events = currentState.events
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+
+                    item {
+                        Text(
+                            text = "Campus Events",
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                    }
+
+                    items(events, key = { it.id }) { event ->
+
+                        EventCard(
+                            event = event,
+                            isAdmin = (role == "admin"),
+                            onDelete = if (role == "admin") {
+                                { vm.deleteEvent(event.id) }
+                            } else null
+                        )
+                    }
+                }
+            }
         }
     }
 }
