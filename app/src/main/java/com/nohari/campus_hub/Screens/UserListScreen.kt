@@ -11,7 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
-import com.nohari.noharishop.models.User
+import com.nohari.campus_hub.models.User
+
 
 @Composable
 fun UserListScreen(navController: NavController) {

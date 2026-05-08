@@ -20,47 +20,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.nohari.campus_hub.navigation.Routes
 
 @Composable
-fun OnboardingScreen(navController: NavController){
-
-    val pages = listOf(
-        "Welcome to Campus Hub",
-        "Manage your school Activities Easily",
-        "Connect students and teachers"
-    )
-    var page by remember { mutableStateOf((0)) }
+fun OnboardingScreen(navController: NavController) {
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement= Arrangement.SpaceBetween
-    ){
-        Spacer(Modifier.height(40.dp))
-        Column{
-            Text(
-                pages[page],
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text("Welcome to Campus Hub")
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = {
+                navController.navigate(Routes.SPLASH)
+            }
         ) {
-            TextButton(onClick = {navController.navigate("register_campus")}) {
-                Text("Skip")
-            }
-            Button(onClick = {
-                if (page < pages.lastIndex){
-                    page++
-                }else{
-                    navController.navigate("register_campus")
-                }
-            }) {
-                Text(if (page == pages.lastIndex)
-                "Start" else "Next")
-            }
+            Text("Get Started")
         }
     }
 }

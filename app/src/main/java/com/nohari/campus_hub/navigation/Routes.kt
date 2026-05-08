@@ -16,4 +16,9 @@ object Routes {
     const val ADD_EVENT = "add_event"
     const val CHAT = "chat/{userId}"
     const val USERS = "users"
+    const val ASSIGNMENT ="assignment"
+    const val PROFILE ="profile"
+    const val CHAT_LIST = "chat_list"
+    const val ONBOARDING="onboarding"
+    const val REGISTER_CAMPUS="register_campus"
 }

@@ -1,8 +1,9 @@
 package com.nohari.campus_hub.models
 
 data class Announcement(
-    var id: String = "",
-    var title: String = "",
-    var message: String = "",
-    var timestamp: Long = System.currentTimeMillis()
+    val id: String = "",
+    val title: String = "",
+    val message: String = "",
+    val timestamp: String = "",
+    val type: String = "announcement"
 )

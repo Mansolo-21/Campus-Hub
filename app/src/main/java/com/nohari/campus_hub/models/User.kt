@@ -1,4 +1,4 @@
-package com.nohari.noharishop.models
+package com.nohari.campus_hub.models
 
 data class User(
     var uid: String ="",

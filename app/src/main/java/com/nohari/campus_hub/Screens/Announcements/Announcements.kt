@@ -10,35 +10,39 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.AppCard
 import com.nohari.campus_hub.models.Announcement
 
-
-
-// 🖥️ SCREEN
 @Composable
 fun AnnouncementsScreen() {
 
+    val db = FirebaseFirestore.getInstance()
+
     var announcements by remember {
-        mutableStateOf(
-            listOf(
-                Announcement(
-                    "Math CAT postponed",
-                    "The test has been moved to next week.",
-                    "30 Apr 2026"
-                ),
-                Announcement(
-                    "Fee deadline extended",
-                    "Students now have 1 extra week to pay.",
-                    "28 Apr 2026"
-                ),
-                Announcement(
-                    "New timetable released",
-                    "Check the portal for the updated schedule.",
-                    "25 Apr 2026"
-                )
-            )
-        )
+        mutableStateOf<List<Announcement>>(emptyList())
+    }
+
+    LaunchedEffect(Unit) {
+
+        db.collection("announcements")
+            .addSnapshotListener { snapshot, _ ->
+
+                if (snapshot != null) {
+
+                    val list = snapshot.documents.mapNotNull { doc ->
+
+                        Announcement(
+                            title = doc.getString("title") ?: "",
+                            message = doc.getString("message") ?: "",
+                            timestamp = doc.getString("timestamp") ?: "",
+                            type = doc.getString("type") ?: "announcement"
+                        )
+                    }
+
+                    announcements = list
+                }
+            }
     }
 
     LazyColumn(
@@ -49,7 +53,7 @@ fun AnnouncementsScreen() {
 
         item {
             Text(
-                text = "📢 Announcements",
+                text = "📢 Campus Feed",
                 style = MaterialTheme.typography.headlineMedium
             )
 
@@ -64,6 +68,8 @@ fun AnnouncementsScreen() {
 @Composable
 fun AnnouncementCard(item: Announcement) {
 
+    val isAssignment = item.type == "assignment"
+
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,13 +78,15 @@ fun AnnouncementCard(item: Announcement) {
 
         Column {
 
-            // 🔔 TITLE ROW
             Row(verticalAlignment = Alignment.CenterVertically) {
 
                 Icon(
                     Icons.Default.Notifications,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
+                    tint = if (isAssignment)
+                        MaterialTheme.colorScheme.tertiary
+                    else
+                        MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -91,7 +99,6 @@ fun AnnouncementCard(item: Announcement) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 📝 MESSAGE
             Text(
                 text = item.message,
                 style = MaterialTheme.typography.bodyMedium
@@ -99,7 +106,6 @@ fun AnnouncementCard(item: Announcement) {
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // 📅 DATE
             Text(
                 text = "Posted: ${item.timestamp}",
                 style = MaterialTheme.typography.bodySmall,
