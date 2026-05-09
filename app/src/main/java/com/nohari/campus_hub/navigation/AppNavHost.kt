@@ -1,37 +1,77 @@
 package com.nohari.campus_hub.navigation
 
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import android.widget.Toast
+import androidx.compose.animation.core.snap
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import com.nohari.campus_hub.Screens.Admin.AddEventScreen
-import com.nohari.campus_hub.Screens.Admin.AdminDashboardScreen
-import com.nohari.campus_hub.Screens.Admin.AnnouncementListScreen
-import com.nohari.campus_hub.Screens.Admin.CreateTeacherScreen
-import com.nohari.campus_hub.Screens.Announcements.AddAnnouncementScreen
-import com.nohari.campus_hub.Screens.Announcements.AnnouncementsScreen
-import com.nohari.campus_hub.Screens.Auth.LoginScreen
-import com.nohari.campus_hub.Screens.Auth.RegisterScreen
-import com.nohari.campus_hub.Screens.ChatListScreen
-import com.nohari.campus_hub.Screens.ChatScreen
-import com.nohari.campus_hub.Screens.Events.EventsScreen
-import com.nohari.campus_hub.Screens.HomeScreen
-import com.nohari.campus_hub.Screens.Marketplace.AddItemScreen
-import com.nohari.campus_hub.Screens.Marketplace.ItemDetailScreen
-import com.nohari.campus_hub.Screens.Marketplace.ItemListScreen
-import com.nohari.campus_hub.Screens.OnboardingScreen
-import com.nohari.campus_hub.Screens.ProfileScreen
-import com.nohari.campus_hub.Screens.SplashScreen
-import com.nohari.campus_hub.Screens.Teacher.AssignmentsScreen
-import com.nohari.campus_hub.Screens.UserListScreen
+import com.google.firebase.firestore.FirebaseFirestore
+import com.nohari.campus_hub.data.SessionManager
+import com.nohari.campus_hub.screens.Admin.AddEventScreen
+import com.nohari.campus_hub.screens.Admin.AdminDashboardScreen
+import com.nohari.campus_hub.screens.Admin.AnnouncementListScreen
+import com.nohari.campus_hub.screens.Admin.CreateTeacherScreen
+import com.nohari.campus_hub.screens.Announcements.AddAnnouncementScreen
+import com.nohari.campus_hub.screens.Announcements.AnnouncementsScreen
+import com.nohari.campus_hub.screens.Auth.LoginScreen
+import com.nohari.campus_hub.screens.Auth.RegisterScreen
+import com.nohari.campus_hub.screens.CampusListScreen
+import com.nohari.campus_hub.screens.ChatListScreen
+import com.nohari.campus_hub.screens.ChatScreen
+import com.nohari.campus_hub.screens.Events.EventsScreen
+import com.nohari.campus_hub.screens.HomeScreen
+import com.nohari.campus_hub.screens.Marketplace.AddItemScreen
+import com.nohari.campus_hub.screens.Marketplace.ItemDetailScreen
+import com.nohari.campus_hub.screens.Marketplace.ItemListScreen
+import com.nohari.campus_hub.screens.OnboardingScreen
+import com.nohari.campus_hub.screens.ProfileScreen
+import com.nohari.campus_hub.screens.SplashScreen
+import com.nohari.campus_hub.screens.Teacher.AssignmentsScreen
+import com.nohari.campus_hub.screens.UserListScreen
+import com.nohari.campus_hub.data.repository.AuthRepository
+import com.nohari.campus_hub.models.User
 import com.nohari.campus_hub.screens.RegisterCampusScreen
 
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
 
+    val context = LocalContext.current
+
+    var startDestination by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+
+        val onboardingDone = SessionManager.isOnboardingDone(context)
+        val campusSelected = SessionManager.isCampusSelected(context)
+
+        startDestination = when {
+
+            !onboardingDone -> Routes.ONBOARDING
+
+            !campusSelected -> Routes.ONBOARDING // or CAMPUS_LIST if you want split flow
+
+            else -> Routes.LOGIN
+        }
+    }
+
+    if (startDestination == null) return
+
     NavHost(
         navController = navController,
-        startDestination = Routes.ONBOARDING
+        startDestination = startDestination!!
     ) {
 
         composable(Routes.LOGIN) {
@@ -72,53 +112,42 @@ fun AppNavHost(navController: NavHostController) {
         }
 
         composable("create_teacher") {
+
+            val scope = rememberCoroutineScope()
+            val repo = AuthRepository()
+
             CreateTeacherScreen(
                 navController = navController,
                 onCreateTeacher = { fullName, email, password ->
 
-                    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
-                    val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    scope.launch {
 
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnSuccessListener { result ->
+                        val result = repo.registerUser(
+                            fullName = fullName,
+                            email = email,
+                            password = password,
+                            role = "teacher"
+                        )
 
-                            val uid = result.user?.uid ?: return@addOnSuccessListener
+                        result.onSuccess {
 
-                            val teacher = hashMapOf(
-                                "uid" to uid,
-                                "fullName" to fullName,
-                                "email" to email,
-                                "role" to "teacher"
-                            )
-
-                            db.collection("teachers")
-                                .document(uid)
-                                .set(teacher)
-                                .addOnSuccessListener {
-
-                                    android.widget.Toast.makeText(
-                                        navController.context,
-                                        "Teacher created successfully",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
-
-                                    navController.popBackStack()
-                                }
-                                .addOnFailureListener {
-                                    android.widget.Toast.makeText(
-                                        navController.context,
-                                        "Firestore error: ${it.message}",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                        }
-                        .addOnFailureListener {
-                            android.widget.Toast.makeText(
+                            Toast.makeText(
                                 navController.context,
-                                "Auth error: ${it.message}",
-                                android.widget.Toast.LENGTH_SHORT
+                                "Teacher created successfully",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            navController.popBackStack()
+
+                        }.onFailure {
+
+                            Toast.makeText(
+                                navController.context,
+                                it.message ?: "Failed",
+                                Toast.LENGTH_SHORT
                             ).show()
                         }
+                    }
                 }
             )
         }
@@ -143,7 +172,27 @@ fun AppNavHost(navController: NavHostController) {
             ProfileScreen(navController)
         }
         composable(Routes.CHAT_LIST) {
-            ChatListScreen(navController, users = emptyList<com.nohari.campus_hub.models.User>())
+
+            val db = FirebaseFirestore.getInstance()
+
+            var users by remember {
+                mutableStateOf<List<User>>(emptyList())
+            }
+
+            LaunchedEffect(Unit) {
+                db.collection("users")
+                    .get()
+                    .addOnSuccessListener { snap ->
+                        users = snap.documents.mapNotNull {
+                            it.toObject(User::class.java)
+                        }
+                    }
+            }
+
+            ChatListScreen(
+                navController = navController,
+                users = users
+            )
         }
 
         composable("chat/{receiverId}") { backStackEntry ->
@@ -156,6 +205,10 @@ fun AppNavHost(navController: NavHostController) {
         composable(Routes.REGISTER_CAMPUS){
             RegisterCampusScreen(navController)
         }
+        composable(Routes.CAMPUS_LIST) {
+            CampusListScreen(navController)
+        }
 
     }
 }
+

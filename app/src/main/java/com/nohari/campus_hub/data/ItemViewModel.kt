@@ -1,0 +1,122 @@
+package com.nohari.campus_hub.data
+
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.navigation.NavHostController
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
+import com.google.firebase.firestore.FirebaseFirestore
+import com.nohari.campus_hub.models.Item
+import java.util.HashMap
+
+class ItemViewModel(
+    private val navController: NavHostController,
+    private val context: Context
+) {
+
+    private val db = FirebaseFirestore.getInstance()
+
+    init {
+        val config = HashMap<String, String>()
+        config["cloud_name"] = "dkgilo0wp"
+        config["api_key"] = "979484549793933"
+
+
+        try {
+            MediaManager.init(context, config)
+        } catch (e: Exception) {
+            // prevents crash if already initialized
+        }
+    }
+
+    fun uploadItem(
+        imageUri: Uri?,
+        name: String,
+        price: String,
+        description: String
+    ) {
+
+        if (imageUri == null) {
+            Toast.makeText(context, "Select image", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (name.isBlank() || price.isBlank() || description.isBlank()) {
+            Toast.makeText(context, "Fill all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val itemId = db.collection("items").document().id
+
+        MediaManager.get().upload(imageUri)
+            .unsigned("campus_hub_upload")
+            .callback(object : UploadCallback {
+
+                override fun onStart(requestId: String?) {}
+
+                override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+
+                override fun onSuccess(requestId: String?, resultData: Map<*, *>) {
+
+                    val imageUrl = resultData["secure_url"].toString()
+
+                    val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+                    val item = Item(
+                        id = itemId,
+                        name = name,
+                        price = price,
+                        description = description,
+                        imageUrl = imageUrl,
+                        ownerId = currentUser?.uid ?: ""
+                    )
+
+                    db.collection("items")
+                        .document(itemId)
+                        .set(item)
+                        .addOnSuccessListener {
+                            Toast.makeText(context, "Item added", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
+                }
+
+                override fun onError(requestId: String?, error: ErrorInfo?) {
+                    Toast.makeText(context, error?.description, Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
+            })
+            .dispatch()
+    }
+
+    fun getItems(items: MutableList<Item>) {
+        db.collection("items")
+            .get()
+            .addOnSuccessListener { result ->
+                items.clear()
+                for (doc in result) {
+                    items.add(doc.toObject(Item::class.java))
+                }
+            }
+    }
+
+    fun deleteItem(item: Item) {
+
+        val currentUser = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+
+        if (currentUser?.uid != item.ownerId) {
+            android.widget.Toast.makeText(
+                context,
+                "You can only delete your own items",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        db.collection("items")
+            .document(item.id)
+            .delete()
+    }
+}

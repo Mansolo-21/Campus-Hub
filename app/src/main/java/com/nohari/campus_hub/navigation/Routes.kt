@@ -21,4 +21,5 @@ object Routes {
     const val CHAT_LIST = "chat_list"
     const val ONBOARDING="onboarding"
     const val REGISTER_CAMPUS="register_campus"
+    const val CAMPUS_LIST = "campus_list"
 }
