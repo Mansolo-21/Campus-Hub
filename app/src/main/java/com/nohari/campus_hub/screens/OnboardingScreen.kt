@@ -29,6 +29,13 @@ import coil.compose.AsyncImage
 import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.data.SessionManager
 import com.nohari.campus_hub.navigation.Routes
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+
 
 /* ========================================================= */
 /* ===================== ONBOARDING ======================== */
@@ -36,7 +43,9 @@ import com.nohari.campus_hub.navigation.Routes
 
 @Composable
 fun OnboardingScreen(navController: NavController) {
+
     val context = LocalContext.current
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,10 +63,13 @@ fun OnboardingScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(24.dp),
+
             verticalArrangement = Arrangement.Center,
+
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // APP LOGO
             Card(
                 modifier = Modifier.size(130.dp),
                 shape = CircleShape
@@ -73,6 +85,7 @@ fun OnboardingScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(30.dp))
 
+            // APP NAME
             Text(
                 text = "Campus Hub",
                 color = Color.White,
@@ -80,29 +93,47 @@ fun OnboardingScreen(navController: NavController) {
                 fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // DESCRIPTION
             Text(
                 text = "Smart Digital Campus Platform",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 16.sp
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text =
+                    "Manage announcements, assignments, chats, marketplace activities, and campus events all in one modern platform designed for students, teachers and administrators.",
+
+                color = Color.White.copy(alpha = 0.75f),
+
+                fontSize = 15.sp,
+
+                lineHeight = 24.sp
             )
 
             Spacer(modifier = Modifier.height(50.dp))
 
+            // CREATE CAMPUS BUTTON
             Button(
                 onClick = {
 
-                    // 🔥 mark onboarding done
+                    // SAVE ONBOARDING STATE
                     SessionManager.setOnboardingDone(context, true)
 
-                    // go register campus
                     navController.navigate(Routes.REGISTER_CAMPUS)
                 },
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp),
+
                 shape = RoundedCornerShape(18.dp),
+
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White
                 )
@@ -115,37 +146,39 @@ fun OnboardingScreen(navController: NavController) {
                     fontSize = 18.sp
                 )
             }
-            }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-        OutlinedButton(
-            onClick = {
+            // EXISTING CAMPUS BUTTON
+            OutlinedButton(
+                onClick = {
 
-                // 🔥 mark onboarding done
-                SessionManager.setOnboardingDone(context, true)
+                    // SAVE ONBOARDING STATE
+                    SessionManager.setOnboardingDone(context, true)
 
-                // go to campus list
-                navController.navigate(Routes.CAMPUS_LIST)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp),
-            shape = RoundedCornerShape(18.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Color.White
-            )
-        ) {
+                    navController.navigate(Routes.CAMPUS_LIST)
+                },
 
-            Text(
-                text = "My Campus Already Exists",
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp
-            )
-        }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+
+                shape = RoundedCornerShape(18.dp),
+
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Color.White
+                )
+            ) {
+
+                Text(
+                    text = "My Campus Already Exists",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp
+                )
+            }
         }
     }
-
+}
 
 /* ========================================================= */
 /* ====================== CAMPUS LIST ====================== */
