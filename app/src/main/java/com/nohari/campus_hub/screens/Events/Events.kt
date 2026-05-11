@@ -27,7 +27,6 @@ fun EventsScreen(
 
     var role by remember { mutableStateOf<String?>(null) }
 
-    // Load user role once
     LaunchedEffect(Unit) {
         RoleManager.getUserRole { userRole ->
             role = userRole
@@ -37,19 +36,13 @@ fun EventsScreen(
     Scaffold(
 
         floatingActionButton = {
-
-            // ONLY ADMIN SEES PLUS BUTTON
             if (role == "admin") {
-
                 FloatingActionButton(
                     onClick = {
                         navController.navigate("add_event")
                     }
                 ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Add Event"
-                    )
+                    Icon(Icons.Default.Add, contentDescription = "Add Event")
                 }
             }
         }
@@ -96,26 +89,38 @@ fun EventsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(padding)
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
 
                     item {
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         Text(
                             text = "Campus Events",
                             style = MaterialTheme.typography.headlineLarge
                         )
+
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
-                    items(events, key = { it.id }) { event ->
+                    items(
+                        items = events,
+                        key = { it.id.ifBlank { it.hashCode().toString() } } // 🔥 SAFE KEY
+                    ) { event ->
 
                         EventCard(
                             event = event,
-                            isAdmin = (role == "admin"),
+                            isAdmin = role == "admin",
                             onDelete = if (role == "admin") {
                                 { vm.deleteEvent(event.id) }
                             } else null
                         )
+                    }
+
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }

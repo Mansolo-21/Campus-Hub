@@ -30,9 +30,10 @@ fun AnnouncementsScreen() {
 
                 if (snapshot != null) {
 
-                    val list = snapshot.documents.mapNotNull { doc ->
+                    val list = snapshot.documents.map { doc ->
 
                         Announcement(
+                            id = doc.id, // 🔥 FIX (IMPORTANT)
                             title = doc.getString("title") ?: "",
                             message = doc.getString("message") ?: "",
                             timestamp = doc.getString("timestamp") ?: "",
@@ -52,6 +53,7 @@ fun AnnouncementsScreen() {
     ) {
 
         item {
+
             Text(
                 text = "📢 Campus Feed",
                 style = MaterialTheme.typography.headlineMedium
@@ -60,11 +62,20 @@ fun AnnouncementsScreen() {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        items(announcements) { item ->
+        items(
+            items = announcements,
+            key = { it.id.ifBlank { it.timestamp + it.title } } // 🔥 SAFE KEY
+        ) { item ->
+
             AnnouncementCard(item)
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(70.dp))
         }
     }
 }
+
 @Composable
 fun AnnouncementCard(item: Announcement) {
 

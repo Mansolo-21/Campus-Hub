@@ -26,7 +26,6 @@ import com.nohari.campus_hub.screens.Admin.CreateTeacherScreen
 import com.nohari.campus_hub.screens.Announcements.AddAnnouncementScreen
 import com.nohari.campus_hub.screens.Announcements.AnnouncementsScreen
 import com.nohari.campus_hub.screens.Auth.LoginScreen
-import com.nohari.campus_hub.screens.Auth.RegisterScreen
 import com.nohari.campus_hub.screens.CampusListScreen
 import com.nohari.campus_hub.screens.ChatListScreen
 import com.nohari.campus_hub.screens.ChatScreen
@@ -39,10 +38,11 @@ import com.nohari.campus_hub.screens.OnboardingScreen
 import com.nohari.campus_hub.screens.ProfileScreen
 import com.nohari.campus_hub.screens.SplashScreen
 import com.nohari.campus_hub.screens.Teacher.AssignmentsScreen
-import com.nohari.campus_hub.screens.UserListScreen
 import com.nohari.campus_hub.data.repository.AuthRepository
 import com.nohari.campus_hub.models.User
 import com.nohari.campus_hub.screens.RegisterCampusScreen
+import com.nohari.campus_hub.screens.UserListScreen
+import com.nohari.campus_hub.screens.auth.RegisterScreen
 
 
 @Composable
@@ -101,7 +101,7 @@ fun AppNavHost(navController: NavHostController) {
             ItemDetailScreen(navController, itemId)
         }
         composable(Routes.ANNOUNCEMENTS) {
-            AnnouncementsScreen()
+            AnnouncementsScreen(navController)
         }
 
         composable(Routes.EVENTS) {
