@@ -23,6 +23,12 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.platform.LocalContext
 
 /* ========================================================= */
 /* ===================== PROFILE SCREEN ==================== */
@@ -37,6 +43,9 @@ fun ProfileScreen(navController: NavController) {
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+    var isEditing by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
 
@@ -120,11 +129,26 @@ fun ProfileScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Text(
-                text = fullName,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
+            if (isEditing && role == "admin") {
+
+                OutlinedTextField(
+                    value = fullName,
+                    onValueChange = {
+                        fullName = it
+                    },
+                    label = {
+                        Text("Full Name")
+                    }
+                )
+
+            } else {
+
+                Text(
+                    text = fullName,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.height(6.dp))
 
@@ -148,6 +172,60 @@ fun ProfileScreen(navController: NavController) {
                 title = "Role",
                 value = role
             )
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (role == "admin") {
+
+            Button(
+                onClick = {
+
+                    if (isEditing) {
+
+                        val uid = auth.currentUser?.uid
+
+                        if (uid != null) {
+
+                            db.collection("users")
+                                .document(uid)
+                                .update(
+                                    mapOf(
+                                        "fullname" to fullName
+                                    )
+                                )
+                                .addOnSuccessListener {
+
+                                    Toast.makeText(
+                                        context,
+                                        "Profile Updated",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                        }
+                    }
+
+                    isEditing = !isEditing
+                }
+            ) {
+
+                Icon(
+                    if (isEditing)
+                        Icons.Default.Save
+                    else
+                        Icons.Default.Edit,
+
+                    contentDescription = null
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    if (isEditing)
+                        "Save Profile"
+                    else
+                        "Edit Profile"
+                )
+            }
         }
     }
 }

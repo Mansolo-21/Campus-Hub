@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
+import com.nohari.campus_hub.navigation.Routes
+import com.nohari.campus_hub.models.Announcement
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,7 +46,9 @@ fun AssignmentsScreen(navController: NavController) {
 
     val db = FirebaseFirestore.getInstance()
 
-    var assignments by remember { mutableStateOf(listOf<Assignment>()) }
+    var assignments by remember {
+        mutableStateOf<List<Announcement>>(emptyList())
+    }
 
     LaunchedEffect(Unit) {
 
@@ -56,10 +60,12 @@ fun AssignmentsScreen(navController: NavController) {
 
                     assignments = snapshot.documents.mapNotNull { doc ->
 
-                        Assignment(
+                        Announcement(
+                            id = doc.id,
                             title = doc.getString("title") ?: "",
-                            subject = doc.getString("subject") ?: "",
-                            dueDate = doc.getString("dueDate") ?: ""
+                            message = doc.getString("message") ?: "",
+                            timestamp = doc.getString("timestamp") ?: "",
+                            type = doc.getString("type") ?: "assignment"
                         )
                     }
                 }
@@ -83,7 +89,7 @@ fun AssignmentsScreen(navController: NavController) {
 
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("create_assignment")
+                    navController.navigate(Routes.CREATE_ASSIGNMENT)
                 },
                 containerColor = Color(0xFF4F46E5)
             ) {
@@ -115,7 +121,7 @@ fun AssignmentsScreen(navController: NavController) {
 /* ========================================================= */
 @Composable
 fun AssignmentCard(
-    assignment: Assignment
+    assignment: Announcement
 ) {
 
     Card(
@@ -140,7 +146,7 @@ fun AssignmentCard(
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = assignment.subject,
+                text = assignment.message,
                 color = Color.Gray
             )
 
@@ -149,23 +155,17 @@ fun AssignmentCard(
             Surface(
                 shape = RoundedCornerShape(50),
                 color = Color(0xFFEEF2FF)
-            ) {
+            ) {Text(
+                text = assignment.timestamp,
+                modifier = Modifier.padding(
+                    horizontal = 14.dp,
+                    vertical = 6.dp
+                ),
+                color = Color(0xFF4F46E5),
+                fontWeight = FontWeight.SemiBold
+            )
 
-                Text(
-                    text = "Due: ${assignment.dueDate}",
-                    modifier = Modifier.padding(
-                        horizontal = 14.dp,
-                        vertical = 6.dp
-                    ),
-                    color = Color(0xFF4F46E5),
-                    fontWeight = FontWeight.SemiBold
-                )
             }
         }
     }
 }
-data class Assignment(
-    val title: String,
-    val subject: String,
-    val dueDate: String
-)

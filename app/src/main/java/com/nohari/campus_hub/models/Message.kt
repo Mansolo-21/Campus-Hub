@@ -1,5 +1,4 @@
 package com.nohari.campus_hub.models
-
 data class Message(
     val id: String = "",
     val senderId: String = "",

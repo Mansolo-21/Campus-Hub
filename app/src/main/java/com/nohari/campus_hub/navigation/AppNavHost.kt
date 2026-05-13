@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.nohari.campus_hub.screens.Teacher.CreateAssignmentScreen
 import androidx.navigation.compose.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.data.SessionManager
@@ -151,9 +152,6 @@ fun AppNavHost(navController: NavHostController) {
                 }
             )
         }
-        composable(Routes.ANNOUNCEMENTS) {
-            AnnouncementListScreen(navController)
-        }
 
         composable(Routes.ADD_ANNOUNCEMENT) {
             AddAnnouncementScreen(navController)
@@ -172,27 +170,7 @@ fun AppNavHost(navController: NavHostController) {
             ProfileScreen(navController)
         }
         composable(Routes.CHAT_LIST) {
-
-            val db = FirebaseFirestore.getInstance()
-
-            var users by remember {
-                mutableStateOf<List<User>>(emptyList())
-            }
-
-            LaunchedEffect(Unit) {
-                db.collection("users")
-                    .get()
-                    .addOnSuccessListener { snap ->
-                        users = snap.documents.mapNotNull {
-                            it.toObject(User::class.java)
-                        }
-                    }
-            }
-
-            ChatListScreen(
-                navController = navController,
-                users = users
-            )
+            ChatListScreen(navController = navController)
         }
 
         composable("chat/{receiverId}") { backStackEntry ->
@@ -207,6 +185,9 @@ fun AppNavHost(navController: NavHostController) {
         }
         composable(Routes.CAMPUS_LIST) {
             CampusListScreen(navController)
+        }
+        composable(Routes.CREATE_ASSIGNMENT){
+            CreateAssignmentScreen(navController)
         }
 
     }

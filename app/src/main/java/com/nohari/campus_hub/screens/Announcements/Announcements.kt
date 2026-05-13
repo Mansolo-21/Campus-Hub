@@ -1,21 +1,32 @@
 package com.nohari.campus_hub.screens.Announcements
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
-import com.nohari.campus_hub.AppCard
 import com.nohari.campus_hub.models.Announcement
+import com.nohari.campus_hub.navigation.Routes
+import com.nohari.campus_hub.utils.RoleManager
 
 @Composable
-fun AnnouncementsScreen() {
+fun AnnouncementsScreen(navController: NavController) {
 
     val db = FirebaseFirestore.getInstance()
 
@@ -23,55 +34,116 @@ fun AnnouncementsScreen() {
         mutableStateOf<List<Announcement>>(emptyList())
     }
 
+    var role by remember {
+        mutableStateOf<String?>(null)
+    }
+
     LaunchedEffect(Unit) {
 
+        // Get current user role
+        RoleManager.getUserRole {
+            role = it
+        }
+
+        // Load announcements + assignments
         db.collection("announcements")
             .addSnapshotListener { snapshot, _ ->
 
                 if (snapshot != null) {
 
-                    val list = snapshot.documents.map { doc ->
+                    announcements = snapshot.documents.map { doc ->
 
                         Announcement(
-                            id = doc.id, // 🔥 FIX (IMPORTANT)
+                            id = doc.id,
                             title = doc.getString("title") ?: "",
                             message = doc.getString("message") ?: "",
                             timestamp = doc.getString("timestamp") ?: "",
                             type = doc.getString("type") ?: "announcement"
                         )
                     }
-
-                    announcements = list
                 }
             }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    Scaffold(
 
-        item {
+        floatingActionButton = {
 
-            Text(
-                text = "📢 Campus Feed",
-                style = MaterialTheme.typography.headlineMedium
-            )
+            // ONLY ADMIN CAN SEE BUTTON
+            if (role == "admin") {
 
-            Spacer(modifier = Modifier.height(16.dp))
+                FloatingActionButton(
+                    onClick = {
+                        navController.navigate(Routes.ADD_ANNOUNCEMENT)
+                    }
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Announcement"
+                    )
+                }
+            }
         }
 
-        items(
-            items = announcements,
-            key = { it.id.ifBlank { it.timestamp + it.title } } // 🔥 SAFE KEY
-        ) { item ->
+    ) { padding ->
 
-            AnnouncementCard(item)
-        }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(Color(0xFFF6F7FB))
+        ) {
 
-        item {
-            Spacer(modifier = Modifier.height(70.dp))
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                // HEADER
+                item {
+
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+
+                            Text(
+                                text = "Campus Feed 📢",
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color.White
+                            )
+
+                            Text(
+                                text = "Latest announcements & assignments",
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // FEED ITEMS
+                items(
+                    announcements,
+                    key = { it.id }
+                ) { item ->
+
+                    AnnouncementCard(item)
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
+                }
+            }
         }
     }
 }
@@ -81,19 +153,26 @@ fun AnnouncementCard(item: Announcement) {
 
     val isAssignment = item.type == "assignment"
 
-    AppCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        )
     ) {
 
-        Column {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
                 Icon(
-                    Icons.Default.Notifications,
+                    imageVector = Icons.Default.Notifications,
                     contentDescription = null,
+
                     tint = if (isAssignment)
                         MaterialTheme.colorScheme.tertiary
                     else
@@ -102,25 +181,40 @@ fun AnnouncementCard(item: Announcement) {
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Column {
+
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    if (isAssignment) {
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "Assignment",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = item.message,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.DarkGray
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Posted: ${item.timestamp}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = item.timestamp,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray
             )
         }
     }

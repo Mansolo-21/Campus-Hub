@@ -1,53 +1,39 @@
 package com.nohari.campus_hub.screens
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.models.User
 
+data class ChatPreview(
+    val user: User,
+    val lastMessage: String = "",
+    val lastTimestamp: Long = 0L
+)
 
 @Composable
-fun ChatListScreen(
-    navController: NavController,
-    users: List<User>
-) {
+fun ChatListScreen(navController: NavController) {
 
     val db = FirebaseFirestore.getInstance()
     val auth = FirebaseAuth.getInstance()
 
-    var users by remember { mutableStateOf(listOf<User>()) }
     val currentUserId = auth.currentUser?.uid
 
     var currentUserRole by remember { mutableStateOf("student") }
+    var chats by remember { mutableStateOf(listOf<ChatPreview>()) }
 
-    // 1. Get current user role
+    // get role
     LaunchedEffect(Unit) {
         currentUserId?.let { uid ->
             db.collection("users").document(uid)
@@ -58,110 +44,108 @@ fun ChatListScreen(
         }
     }
 
-    // 2. Load users
+    // load users + last messages
     LaunchedEffect(currentUserRole) {
 
         db.collection("users")
             .addSnapshotListener { snapshot, _ ->
 
-                val list = snapshot?.documents?.mapNotNull { doc ->
+                val users = snapshot?.documents?.mapNotNull {
+                    it.toObject(User::class.java)
+                }?.filter { it.uid != currentUserId } ?: emptyList()
 
-                    val user = doc.toObject(User::class.java) ?: return@mapNotNull null
+                val temp = mutableListOf<ChatPreview>()
 
-                    if (user.uid == currentUserId) return@mapNotNull null
+                users.forEach { user ->
 
-                    // ROLE FILTERING LOGIC
-                    when (currentUserRole) {
+                    val chatId =
+                        if (currentUserId!! < user.uid)
+                            "$currentUserId-${user.uid}"
+                        else
+                            "${user.uid}-$currentUserId"
 
-                        "student" -> if (user.role == "teacher") user else null
-                        "teacher" -> if (user.role == "student") user else null
-                        else -> user
-                    }
+                    db.collection("chats")
+                        .document(chatId)
+                        .addSnapshotListener { chatSnap, _ ->
 
-                }?.filterNotNull() ?: emptyList()
+                            val preview = ChatPreview(
+                                user = user,
+                                lastMessage = chatSnap?.getString("lastMessage") ?: "",
+                                lastTimestamp = chatSnap?.getLong("lastTimestamp") ?: 0L
+                            )
 
-                users = list
+                            temp.removeAll { it.user.uid == user.uid }
+                            temp.add(preview)
+
+                            chats = temp.sortedByDescending { it.lastTimestamp }
+                        }
+                }
             }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
         Text(
-            text = "Chats",
+            "Chats",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(16.dp)
         )
 
         LazyColumn {
+            items(chats) { chat ->
 
-            items(users) { user ->
+                val time = if (chat.lastTimestamp != 0L)
+                    android.text.format.DateFormat.format("hh:mm a", chat.lastTimestamp)
+                else ""
 
-                ChatUserItem(
-                    user = user,
-                    onClick = {
-                        navController.navigate("chat/${user.uid}")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            navController.navigate("chat/${chat.user.uid}")
+                        }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Surface(
+                        modifier = Modifier.size(45.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(chat.user.fullName.firstOrNull()?.toString() ?: "?")
+                        }
                     }
-                )
-            }
-        }
-    }
-}
-@Composable
-fun ChatUserItem(
-    user: User,
-    onClick: () -> Unit
-) {
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(6.dp)
-    ) {
+                    Spacer(Modifier.width(12.dp))
 
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+                    Column(modifier = Modifier.weight(1f)) {
 
-            // Avatar
-            Surface(
-                modifier = Modifier.size(45.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-            ) {
+                        Text(chat.user.fullName)
 
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = user.fullName.firstOrNull()?.toString() ?: "?",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                        Text(
+                            text = chat.lastMessage.ifEmpty { "No messages yet" },
+                            color = Color.Gray,
+                            maxLines = 1
+                        )
+                    }
+
+                    Column(horizontalAlignment = Alignment.End) {
+
+                        Text(
+                            text = time.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+
+                        Text(
+                            "Chat",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-
-                Text(
-                    text = user.fullName,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Text(
-                    text = user.role,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Text(
-                text = "Chat",
-                color = MaterialTheme.colorScheme.primary
-            )
         }
     }
 }

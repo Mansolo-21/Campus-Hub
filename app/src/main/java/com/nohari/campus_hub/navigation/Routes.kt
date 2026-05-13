@@ -22,4 +22,6 @@ object Routes {
     const val ONBOARDING="onboarding"
     const val REGISTER_CAMPUS="register_campus"
     const val CAMPUS_LIST = "campus_list"
+    const val CREATE_ASSIGNMENT = "create_assignment"
+
 }

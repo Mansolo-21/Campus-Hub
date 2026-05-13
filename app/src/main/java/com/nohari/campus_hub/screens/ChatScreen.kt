@@ -6,13 +6,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.nohari.campus_hub.data.ChatViewModel
 import com.nohari.campus_hub.models.Message
-
 
 @Composable
 fun ChatScreen(receiverId: String) {
@@ -24,7 +24,6 @@ fun ChatScreen(receiverId: String) {
     var text by remember { mutableStateOf("") }
 
     LaunchedEffect(receiverId) {
-
         vm.listenMessages(receiverId) {
             messages.clear()
             messages.addAll(it)
@@ -37,7 +36,7 @@ fun ChatScreen(receiverId: String) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize()) {
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -49,26 +48,47 @@ fun ChatScreen(receiverId: String) {
                 val isMe = msg.senderId ==
                         FirebaseAuth.getInstance().currentUser?.uid
 
-                Surface(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(6.dp),
-                    color = if (isMe)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant
+                    contentAlignment = if (isMe)
+                        Alignment.CenterEnd
+                    else Alignment.CenterStart
                 ) {
-                    Text(
-                        text = msg.text,
-                        modifier = Modifier.padding(10.dp),
-                        color = if (isMe) Color.White else Color.Black
-                    )
+
+                    Surface(
+                        color = if (isMe)
+                            MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+
+                        Column(modifier = Modifier.padding(10.dp)) {
+
+                            Text(
+                                text = msg.text,
+                                color = if (isMe) Color.White else Color.Black
+                            )
+
+                            Text(
+                                text = android.text.format.DateFormat.format(
+                                    "hh:mm a",
+                                    msg.timestamp
+                                ).toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isMe)
+                                    Color.White.copy(alpha = 0.7f)
+                                else Color.Gray
+                            )
+                        }
+                    }
                 }
             }
         }
 
         Row(
-            modifier = Modifier
+            Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
@@ -80,16 +100,14 @@ fun ChatScreen(receiverId: String) {
                 placeholder = { Text("Message...") }
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(Modifier.width(8.dp))
 
-            Button(
-                onClick = {
-                    if (text.isNotBlank()) {
-                        vm.sendMessage(receiverId, text.trim())
-                        text = ""
-                    }
+            Button(onClick = {
+                if (text.isNotBlank()) {
+                    vm.sendMessage(receiverId, text.trim())
+                    text = ""
                 }
-            ) {
+            }) {
                 Text("Send")
             }
         }

@@ -3,7 +3,7 @@ package com.nohari.campus_hub.screens.Admin
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -36,23 +36,30 @@ fun AnnouncementListScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Announcements") })
-
+                title = { Text("Announcements") }
+            )
         },
+
         floatingActionButton = {
             if (role == "admin") {
                 FloatingActionButton(
-                    onClick = { navController.navigate("add_announcement") }
+                    onClick = {
+                        navController.navigate("add_announcement")
+                    }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Announcement")
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Announcement"
+                    )
                 }
             }
         }
+
     ) { padding ->
 
         if (announcements.isEmpty()) {
 
-            // ✅ Empty state
+            // Empty state
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -68,12 +75,22 @@ fun AnnouncementListScreen(navController: NavHostController) {
 
             LazyColumn(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(padding)
                     .padding(8.dp),
+
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
 
-                items(announcements, key = { it.id }) { item ->
+                itemsIndexed(
+                    announcements,
+
+                    // FIXED UNIQUE KEYS
+                    key = { index, item ->
+                        item.id.ifEmpty { index.toString() }
+                    }
+
+                ) { _, item ->
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -96,7 +113,7 @@ fun AnnouncementListScreen(navController: NavHostController) {
                                 style = MaterialTheme.typography.bodyMedium
                             )
 
-                            // ✅ Admin controls
+                            // Admin Controls
                             if (role == "admin") {
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -124,29 +141,54 @@ fun AnnouncementListScreen(navController: NavHostController) {
             }
         }
 
-        // 🔴 Delete Confirmation Dialog
+        // Delete Confirmation Dialog
         if (announcementToDelete != null) {
+
             AlertDialog(
-                onDismissRequest = { announcementToDelete = null },
-                title = { Text("Delete Announcement") },
-                text = { Text("Are you sure you want to delete this announcement?") },
+                onDismissRequest = {
+                    announcementToDelete = null
+                },
+
+                title = {
+                    Text("Delete Announcement")
+                },
+
+                text = {
+                    Text("Are you sure you want to delete this announcement?")
+                },
+
                 confirmButton = {
+
                     TextButton(
                         onClick = {
+
                             announcementToDelete?.let {
+
                                 viewModel.deleteAnnouncement(it.id)
-                                announcements.remove(it) // instant UI update
+
+                                // Instant UI update
+                                announcements.remove(it)
                             }
+
                             announcementToDelete = null
                         }
                     ) {
-                        Text("Delete", color = MaterialTheme.colorScheme.error)
+
+                        Text(
+                            text = "Delete",
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 },
+
                 dismissButton = {
+
                     TextButton(
-                        onClick = { announcementToDelete = null }
+                        onClick = {
+                            announcementToDelete = null
+                        }
                     ) {
+
                         Text("Cancel")
                     }
                 }
