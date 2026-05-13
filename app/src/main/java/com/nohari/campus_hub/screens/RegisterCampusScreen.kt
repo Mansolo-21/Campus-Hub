@@ -37,13 +37,16 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.data.SessionManager
 import com.nohari.campus_hub.navigation.Routes
 
+private val DeepBlue = Color(0xFF0D47A1)
+private val MidBlue = Color(0xFF1976D2)
+private val LightBlue = Color(0xFFEAF2FF)
+
 @Composable
 fun RegisterCampusScreen(
     navController: NavController
 ) {
 
     val context = LocalContext.current
-
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
 
@@ -56,7 +59,6 @@ fun RegisterCampusScreen(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     var loading by remember { mutableStateOf(false) }
-
     var logoUri by remember { mutableStateOf<Uri?>(null) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -71,8 +73,9 @@ fun RegisterCampusScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF4F46E5),
-                        Color(0xFF111827)
+                        DeepBlue,
+                        MidBlue,
+                        LightBlue
                     )
                 )
             )
@@ -83,236 +86,148 @@ fun RegisterCampusScreen(
                 .fillMaxWidth()
                 .padding(20.dp)
                 .align(Alignment.Center),
-
-            shape = RoundedCornerShape(32.dp),
-
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            )
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
 
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier.padding(22.dp)
             ) {
 
                 Text(
                     text = "Create Campus",
-                    fontSize = 32.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111827)
+                    color = DeepBlue
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Setup your smart campus platform",
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontSize = 14.sp
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 
-                // LOGO SECTION
-
-                Box(
+                // 🔵 LOGO UPLOAD (modern clickable avatar)
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE6EEF9)),
+                        contentAlignment = Alignment.Center
                     ) {
 
-                        Card(
-                            modifier = Modifier
-                                .size(110.dp)
-                                .clip(CircleShape),
-
-                            shape = CircleShape
-                        ) {
-
-                            if (logoUri != null) {
-
-                                AsyncImage(
-                                    model = logoUri,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-
-                            } else {
-
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color(0xFFE5E7EB)),
-
-                                    contentAlignment = Alignment.Center
-                                ) {
-
-                                    Icon(
-                                        imageVector =
-                                            Icons.Default.AddPhotoAlternate,
-
-                                        contentDescription = null,
-
-                                        tint = Color.Gray,
-
-                                        modifier = Modifier.size(40.dp)
-                                    )
-                                }
-                            }
+                        if (logoUri != null) {
+                            AsyncImage(
+                                model = logoUri,
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.AddPhotoAlternate,
+                                contentDescription = null,
+                                tint = MidBlue,
+                                modifier = Modifier.size(40.dp)
+                            )
                         }
+                    }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                        TextButton(
-                            onClick = {
-                                launcher.launch("image/*")
-                            }
-                        ) {
-
-                            Text("Upload Campus Logo")
-                        }
+                    TextButton(onClick = { launcher.launch("image/*") }) {
+                        Text("Upload Campus Logo", color = DeepBlue)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // CAMPUS NAME
-
+                // 🏫 CAMPUS NAME
                 OutlinedTextField(
                     value = schoolName,
-
-                    onValueChange = {
-                        schoolName = it.trimStart()
-                    },
-
+                    onValueChange = { schoolName = it },
                     label = { Text("Campus Name") },
-
                     modifier = Modifier.fillMaxWidth(),
-
-                    shape = RoundedCornerShape(18.dp),
-
+                    shape = RoundedCornerShape(16.dp),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // EMAIL
-
+                // 📧 EMAIL
                 OutlinedTextField(
                     value = email,
-
-                    onValueChange = {
-                        email = it.trim()
-                    },
-
+                    onValueChange = { email = it },
                     label = { Text("Admin Email") },
-
                     modifier = Modifier.fillMaxWidth(),
-
-                    shape = RoundedCornerShape(18.dp),
-
+                    shape = RoundedCornerShape(16.dp),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // PASSWORD
-
+                // 🔒 PASSWORD
                 OutlinedTextField(
                     value = password,
-
-                    onValueChange = {
-                        password = it.trim()
-                    },
-
+                    onValueChange = { password = it },
                     label = { Text("Password") },
-
                     visualTransformation =
-                        if (passwordVisible)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
-
+                        if (passwordVisible) VisualTransformation.None
+                        else PasswordVisualTransformation(),
                     trailingIcon = {
-
-                        IconButton(
-                            onClick = {
-                                passwordVisible = !passwordVisible
-                            }
-                        ) {
-
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                imageVector =
-                                    if (passwordVisible)
-                                        Icons.Default.VisibilityOff
-                                    else
-                                        Icons.Default.Visibility,
-
+                                if (passwordVisible)
+                                    Icons.Default.VisibilityOff
+                                else
+                                    Icons.Default.Visibility,
                                 contentDescription = null
                             )
                         }
                     },
-
                     modifier = Modifier.fillMaxWidth(),
-
-                    shape = RoundedCornerShape(18.dp),
-
+                    shape = RoundedCornerShape(16.dp),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                // CONFIRM PASSWORD
-
+                // 🔒 CONFIRM PASSWORD
                 OutlinedTextField(
                     value = confirmPassword,
-
-                    onValueChange = {
-                        confirmPassword = it.trim()
-                    },
-
+                    onValueChange = { confirmPassword = it },
                     label = { Text("Confirm Password") },
-
                     visualTransformation =
-                        if (confirmPasswordVisible)
-                            VisualTransformation.None
-                        else
-                            PasswordVisualTransformation(),
-
+                        if (confirmPasswordVisible) VisualTransformation.None
+                        else PasswordVisualTransformation(),
                     trailingIcon = {
-
-                        IconButton(
-                            onClick = {
-                                confirmPasswordVisible =
-                                    !confirmPasswordVisible
-                            }
-                        ) {
-
+                        IconButton(onClick = {
+                            confirmPasswordVisible = !confirmPasswordVisible
+                        }) {
                             Icon(
-                                imageVector =
-                                    if (confirmPasswordVisible)
-                                        Icons.Default.VisibilityOff
-                                    else
-                                        Icons.Default.Visibility,
-
+                                if (confirmPasswordVisible)
+                                    Icons.Default.VisibilityOff
+                                else
+                                    Icons.Default.Visibility,
                                 contentDescription = null
                             )
                         }
                     },
-
                     modifier = Modifier.fillMaxWidth(),
-
-                    shape = RoundedCornerShape(18.dp),
-
+                    shape = RoundedCornerShape(16.dp),
                     singleLine = true
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 
-                // CREATE BUTTON
-
+                // 🚀 CREATE BUTTON (blue CTA)
                 Button(
                     onClick = {
 
@@ -323,7 +238,6 @@ fun RegisterCampusScreen(
                         val cleanPassword = password.trim()
                         val cleanConfirmPassword = confirmPassword.trim()
 
-                        // ---------------- VALIDATION ----------------
                         if (
                             cleanSchoolName.isBlank() ||
                             cleanEmail.isBlank() ||
@@ -337,13 +251,13 @@ fun RegisterCampusScreen(
 
                         if (!Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches()) {
                             loading = false
-                            Toast.makeText(context, "Enter valid email", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Invalid email", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
 
                         if (cleanPassword.length < 6) {
                             loading = false
-                            Toast.makeText(context, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Password too short", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
 
@@ -355,28 +269,18 @@ fun RegisterCampusScreen(
 
                         if (logoUri == null) {
                             loading = false
-                            Toast.makeText(context, "Upload campus logo", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Upload logo", Toast.LENGTH_SHORT).show()
                             return@Button
                         }
 
-                        // ---------------- CLOUDINARY UPLOAD ----------------
                         MediaManager.get()
                             .upload(logoUri)
                             .unsigned("campus_hub_upload")
                             .callback(object : UploadCallback {
-
                                 override fun onStart(requestId: String?) {}
+                                override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
 
-                                override fun onProgress(
-                                    requestId: String?,
-                                    bytes: Long,
-                                    totalBytes: Long
-                                ) {}
-
-                                override fun onSuccess(
-                                    requestId: String?,
-                                    resultData: Map<*, *>?
-                                ) {
+                                override fun onSuccess(requestId: String?, resultData: Map<*, *>?) {
 
                                     val logoUrl = resultData?.get("secure_url") as? String
 
@@ -386,117 +290,84 @@ fun RegisterCampusScreen(
                                         return
                                     }
 
-                                    // ---------------- CREATE AUTH USER ----------------
-                                    auth.createUserWithEmailAndPassword(
-                                        cleanEmail,
-                                        cleanPassword
-                                    ).addOnSuccessListener {
+                                    auth.createUserWithEmailAndPassword(cleanEmail, cleanPassword)
+                                        .addOnSuccessListener {
 
-                                        val uid = auth.currentUser?.uid ?: return@addOnSuccessListener
-                                        val campusId = db.collection("campuses").document().id
+                                            val uid = auth.currentUser?.uid ?: return@addOnSuccessListener
+                                            val campusId = db.collection("campuses").document().id
 
-                                        val campus = hashMapOf(
-                                            "id" to campusId,
-                                            "campusName" to cleanSchoolName,
-                                            "logoUrl" to logoUrl
-                                        )
+                                            val campus = hashMapOf(
+                                                "id" to campusId,
+                                                "campusName" to cleanSchoolName,
+                                                "logoUrl" to logoUrl
+                                            )
 
-                                        // ---------------- SAVE CAMPUS ----------------
-                                        db.collection("campuses")
-                                            .document(campusId)
-                                            .set(campus)
-                                            .addOnSuccessListener {
+                                            db.collection("campuses").document(campusId).set(campus)
+                                                .addOnSuccessListener {
 
-                                                val user = hashMapOf(
-                                                    "uid" to uid,
-                                                    "email" to cleanEmail,
-                                                    "role" to "admin",
-                                                    "campusId" to campusId
-                                                )
+                                                    val user = hashMapOf(
+                                                        "uid" to uid,
+                                                        "email" to cleanEmail,
+                                                        "role" to "admin",
+                                                        "campusId" to campusId
+                                                    )
 
-                                                // ---------------- SAVE USER ----------------
-                                                db.collection("users")
-                                                    .document(uid)
-                                                    .set(user)
-                                                    .addOnSuccessListener {
+                                                    db.collection("users").document(uid).set(user)
+                                                        .addOnSuccessListener {
 
-                                                        loading = false
+                                                            loading = false
 
-                                                        // 🔥 IMPORTANT: mark session
-                                                        SessionManager.setOnboardingDone(context, true)
-                                                        SessionManager.setCampusSelected(context, true)
+                                                            SessionManager.setOnboardingDone(context, true)
+                                                            SessionManager.setCampusSelected(context, true)
 
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Campus Created Successfully",
-                                                            Toast.LENGTH_LONG
-                                                        ).show()
+                                                            Toast.makeText(
+                                                                context,
+                                                                "Campus Created Successfully",
+                                                                Toast.LENGTH_LONG
+                                                            ).show()
 
-                                                        // ---------------- NAVIGATE ----------------
-                                                        navController.navigate(Routes.LOGIN) {
-                                                            popUpTo(Routes.REGISTER_CAMPUS) {
-                                                                inclusive = true
+                                                            navController.navigate(Routes.LOGIN) {
+                                                                popUpTo(Routes.REGISTER_CAMPUS) {
+                                                                    inclusive = true
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                    .addOnFailureListener {
-                                                        loading = false
-                                                        Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
-                                                    }
-                                            }
-                                            .addOnFailureListener {
-                                                loading = false
-                                                Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
-                                            }
-
-                                    }.addOnFailureListener {
-                                        loading = false
-                                        Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
-                                    }
+                                                }
+                                        }
                                 }
 
-                                override fun onError(
-                                    requestId: String?,
-                                    error: ErrorInfo?
-                                ) {
+                                override fun onError(requestId: String?, error: ErrorInfo?) {
                                     loading = false
-                                    Toast.makeText(
-                                        context,
-                                        error?.description ?: "Image upload failed",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                    Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
                                 }
 
-                                override fun onReschedule(
-                                    requestId: String?,
-                                    error: ErrorInfo?
-                                ) {}
+                                override fun onReschedule(requestId: String?, error: ErrorInfo?) {}
                             })
                             .dispatch()
-                    },
 
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(58.dp),
-
-                    shape = RoundedCornerShape(20.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepBlue)
                 ) {
 
                     if (loading) {
                         CircularProgressIndicator(
                             color = Color.White,
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(22.dp),
                             strokeWidth = 3.dp
                         )
                     } else {
                         Text(
-                            text = "Create Campus",
-                            fontSize = 18.sp,
+                            "Create Campus",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
-                    }
-                }
             }
         }
+    }
+}

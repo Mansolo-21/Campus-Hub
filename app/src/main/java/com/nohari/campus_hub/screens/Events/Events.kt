@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -18,6 +19,10 @@ import com.nohari.campus_hub.Components.EventCard
 import com.nohari.campus_hub.data.EventViewModel
 import com.nohari.campus_hub.models.EventUiState
 import com.nohari.campus_hub.utils.RoleManager
+
+private val DeepBlue = Color(0xFF0D47A1)
+private val MidBlue = Color(0xFF1976D2)
+private val LightBlueBg = Color(0xFFEAF2FF)
 
 @Composable
 fun EventsScreen(navController: NavHostController) {
@@ -34,55 +39,61 @@ fun EventsScreen(navController: NavHostController) {
     }
 
     Scaffold(
+        containerColor = LightBlueBg,
 
         floatingActionButton = {
             if (role == "admin") {
                 FloatingActionButton(
                     onClick = { navController.navigate("add_event") },
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = DeepBlue,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Event")
                 }
             }
         }
-
     ) { padding ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF6F7FB))
+                .padding(padding)
         ) {
 
             when (val currentState = state) {
 
                 is EventUiState.Loading -> {
-
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = MidBlue)
                     }
                 }
 
                 is EventUiState.Empty -> {
-
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No campus events available")
+                        Text(
+                            "No campus events yet",
+                            color = DeepBlue,
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
                 }
 
                 is EventUiState.Error -> {
-
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(currentState.message)
+                        Text(
+                            currentState.message,
+                            color = Color.Red
+                        )
                     }
                 }
 
@@ -91,60 +102,64 @@ fun EventsScreen(navController: NavHostController) {
                     val events = currentState.events
 
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(padding),
+                        modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
 
-                        // HEADER CARD
+                        // 🔵 HEADER
                         item {
-
                             Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primary
-                                ),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = DeepBlue),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-
-                                Column(modifier = Modifier.padding(16.dp)) {
-
+                                Column(
+                                    modifier = Modifier.padding(18.dp)
+                                ) {
                                     Text(
-                                        text = "Campus Events 🎓",
+                                        text = "Campus Events ",
                                         style = MaterialTheme.typography.headlineMedium,
                                         color = Color.White
                                     )
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(6.dp))
 
                                     Text(
-                                        text = "Stay updated with all campus activities",
+                                        text = "Stay updated with lectures, activities & campus life",
                                         color = Color.White.copy(alpha = 0.85f)
                                     )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
 
-                        // EVENTS LIST
+                        // 📌 EVENTS
                         items(
                             items = events,
                             key = { it.id.ifBlank { it.hashCode().toString() } }
                         ) { event ->
 
-                            EventCard(
-                                event = event,
-                                isAdmin = role == "admin",
-                                onDelete = if (role == "admin") {
-                                    { vm.deleteEvent(event.id) }
-                                } else null
-                            )
+                            Card(
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                ),
+                                elevation = CardDefaults.cardElevation(6.dp)
+                            ) {
+                                EventCard(
+                                    event = event,
+                                    isAdmin = role == "admin",
+                                    onDelete = if (role == "admin") {
+                                        { vm.deleteEvent(event.id) }
+                                    } else null
+                                )
+                            }
                         }
 
                         item {
-                            Spacer(modifier = Modifier.height(80.dp))
+                            Spacer(modifier = Modifier.height(90.dp))
                         }
                     }
                 }

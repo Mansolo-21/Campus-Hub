@@ -3,26 +3,19 @@ package com.nohari.campus_hub.navigation
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import android.widget.Toast
-import androidx.compose.animation.core.snap
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.nohari.campus_hub.screens.Teacher.CreateAssignmentScreen
 import androidx.navigation.compose.*
-import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.data.SessionManager
 import com.nohari.campus_hub.screens.Admin.AddEventScreen
 import com.nohari.campus_hub.screens.Admin.AdminDashboardScreen
-import com.nohari.campus_hub.screens.Admin.AnnouncementListScreen
 import com.nohari.campus_hub.screens.Admin.CreateTeacherScreen
 import com.nohari.campus_hub.screens.Announcements.AddAnnouncementScreen
 import com.nohari.campus_hub.screens.Announcements.AnnouncementsScreen
@@ -40,7 +33,6 @@ import com.nohari.campus_hub.screens.ProfileScreen
 import com.nohari.campus_hub.screens.SplashScreen
 import com.nohari.campus_hub.screens.Teacher.AssignmentsScreen
 import com.nohari.campus_hub.data.repository.AuthRepository
-import com.nohari.campus_hub.models.User
 import com.nohari.campus_hub.screens.RegisterCampusScreen
 import com.nohari.campus_hub.screens.UserListScreen
 import com.nohari.campus_hub.screens.auth.RegisterScreen
@@ -170,7 +162,7 @@ fun AppNavHost(navController: NavHostController) {
             ProfileScreen(navController)
         }
         composable(Routes.CHAT_LIST) {
-            ChatListScreen(navController = navController)
+            ChatListScreen(navController)
         }
 
         composable("chat/{receiverId}") { backStackEntry ->

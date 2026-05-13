@@ -32,6 +32,15 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.nohari.campus_hub.navigation.Routes
 import kotlinx.coroutines.tasks.await
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import com.nohari.campus_hub.navigation.CampusBottomNavBar
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
@@ -64,9 +73,7 @@ fun HomeScreen(navController: NavController) {
                     .await()
 
                 fullName = userDoc.getString("fullName") ?: "Student"
-
-                role = userDoc.getString("role")
-                    ?: "student"
+                role = userDoc.getString("role") ?: "student"
 
                 val campusId = userDoc.getString("campusId")
 
@@ -77,11 +84,8 @@ fun HomeScreen(navController: NavController) {
                         .get()
                         .await()
 
-                    campusName = campusDoc.getString("campusName")
-                        ?: "Campus Hub"
-
-                    campusLogo = campusDoc.getString("logoUrl")
-                        ?: campusLogo
+                    campusName = campusDoc.getString("campusName") ?: "Campus Hub"
+                    campusLogo = campusDoc.getString("logoUrl") ?: campusLogo
                 }
 
             } catch (e: Exception) {
@@ -90,7 +94,6 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
-    // DYNAMIC ACTIONS
     val quickActions = remember(role) {
 
         mutableListOf(
@@ -125,7 +128,6 @@ fun HomeScreen(navController: NavController) {
         ).apply {
 
             if (role == "teacher") {
-
                 add(
                     HomeAction(
                         "Add Assignment",
@@ -137,7 +139,6 @@ fun HomeScreen(navController: NavController) {
             }
 
             if (role == "admin") {
-
                 add(
                     HomeAction(
                         "Admin Panel",
@@ -150,14 +151,22 @@ fun HomeScreen(navController: NavController) {
         }
     }
 
+    Scaffold(
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFF5F7FB)
-    ) {
+        // 🔵 BOTTOM NAV BAR
+        bottomBar = {
+            CampusBottomNavBar(
+                navController = navController,
+                currentRoute = "home"
+            )
+        }
+
+    ) { padding ->
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
             contentPadding = PaddingValues(bottom = 30.dp)
         ) {
 
@@ -214,7 +223,7 @@ fun HomeScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Welcome back, $fullName ",
+                                text = "Welcome back, $fullName",
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontSize = 16.sp
                             )
@@ -225,7 +234,6 @@ fun HomeScreen(navController: NavController) {
                                 shape = RoundedCornerShape(50),
                                 color = Color.White.copy(alpha = 0.2f)
                             ) {
-
                                 Text(
                                     text = role.uppercase(),
                                     color = Color.White,
@@ -237,31 +245,6 @@ fun HomeScreen(navController: NavController) {
                                 )
                             }
                         }
-
-                        // PROFILE BUTTON
-                        Card(
-                            modifier = Modifier
-                                .padding(18.dp)
-                                .align(Alignment.TopEnd),
-                            shape = CircleShape,
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.White.copy(alpha = 0.2f)
-                            )
-                        ) {
-
-                            IconButton(
-                                onClick = {
-                                    navController.navigate(Routes.PROFILE)
-                                }
-                            ) {
-
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = Color.White
-                                )
-                            }
-                        }
                     }
                 }
             }
@@ -269,47 +252,38 @@ fun HomeScreen(navController: NavController) {
             // QUICK ACTIONS
             item {
 
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn() + slideInVertically()
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp)
                 ) {
 
-                    Column(
-                        modifier = Modifier.padding(horizontal = 20.dp)
+                    Text(
+                        text = "Quick Access",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF111827)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.height(600.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        userScrollEnabled = false
                     ) {
 
-                        Text(
-                            text = "Quick Access",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF111827)
-                        )
+                        items(quickActions) { action ->
 
-                        Spacer(modifier = Modifier.height(18.dp))
-
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.height(650.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            userScrollEnabled = false
-                        ) {
-
-                            items(quickActions) { action ->
-
-                                PremiumActionCard(
-                                    action = action
-                                ) {
-
-                                    navController.navigate(action.route)
-                                }
+                            PremiumActionCard(action) {
+                                navController.navigate(action.route)
                             }
                         }
                     }
                 }
             }
 
-            // CAMPUS UPDATE CARD
+            // CAMPUS UPDATE
             item {
 
                 Card(
@@ -322,40 +296,35 @@ fun HomeScreen(navController: NavController) {
                     )
                 ) {
 
-                    Column(
-                        modifier = Modifier.padding(22.dp)
-                    ) {
+                    Column(modifier = Modifier.padding(22.dp)) {
 
                         Text(
-                            text = "Campus Updates",
+                            "Campus Updates",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 22.sp
+                            fontSize = 20.sp
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
-                            text = "Stay updated with announcements, assignments, events and student activities in real-time.",
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = 15.sp
+                            "Stay updated with announcements, events, and activities.",
+                            color = Color.White.copy(alpha = 0.9f)
                         )
                     }
                 }
             }
 
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
-            // LOGOUT BUTTON
+            // LOGOUT
             item {
 
                 Button(
                     onClick = {
-
                         auth.signOut()
-
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(0)
                         }
@@ -363,31 +332,18 @@ fun HomeScreen(navController: NavController) {
                     modifier = Modifier
                         .padding(horizontal = 20.dp)
                         .fillMaxWidth()
-                        .height(60.dp),
+                        .height(58.dp),
                     shape = RoundedCornerShape(20.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFDC2626)
                     )
                 ) {
-
-                    Icon(
-                        Icons.Default.AccountCircle,
-                        contentDescription = null
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Logout",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text("Logout", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 }
-
 /* ------------------------------------------------------ */
 
 @Composable
@@ -464,3 +420,4 @@ data class HomeAction(
     val route: String,
     val color: Color
 )
+
